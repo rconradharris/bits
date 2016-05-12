@@ -14,26 +14,16 @@ Run
 Examples
 ========
 
-Simple formatting can be done with the ``b()`` and ``l()`` series of functions
-which print the results in big-endian and little-endian format respectively.
+The ``Bitfield`` class is what performs the bitwise operations and
+pretty-prints the results.
+
+Convenience functions exists for common sizes, like a nibble (``b4``), byte
+(``b8``), 16-bit word (``b16``), 32-bit doubleword (``b32``), a 64-bit
+quadword (``b64``), and 128-bit double quadword (``b128``).
 
 ::
 
-    >>> b(32)
-    '[0000 0000 0000 0000 0000 0000 0010 0000]'
-
-    >>> b(32 << 1)
-    '[0000 0000 0000 0000 0000 0000 0100 0000]'
-
-    >>> l32(0xffff & 0x1f)
-    '[1111 1000 0000 0000 0000 0000 0000 0000]'
-
-You can also use the ``Bitfield`` class, aliased as ``bf()`` to evaluate
-complex expressions and see the intermediate results.
-
-::
-
-    >>> ((~bf(0x32)) | bf(0x63)) ^ bf(0x22)
+    >>> ((~b32(0x32)) | b32(0x63)) ^ b32(0x22)
     Operand         : [0000 0000 0000 0000 0000 0000 0011 0010]
     ~               : [1111 1111 1111 1111 1111 1111 1100 1101]
 

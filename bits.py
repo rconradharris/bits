@@ -49,25 +49,6 @@ def _format_le(x, width=32, grouping=4, brackets=True, overflow=False):
     return sval
 
 
-# Big endian
-b4 = lambda x: _format_be(x, width=4)
-b8 = lambda x: _format_be(x, width=8)
-b16 = lambda x: _format_be(x, width=16)
-b32 = lambda x: _format_be(x, width=32)
-b64 = lambda x: _format_be(x, width=64)
-b128 = lambda x: _format_be(x, width=128)
-b = b32
-
-# Little endian
-l4 = lambda x: _format_le(x, width=4)
-l8 = lambda x: _format_le(x, width=8)
-l16 = lambda x: _format_le(x, width=16)
-l32 = lambda x: _format_le(x, width=32)
-l64 = lambda x: _format_le(x, width=64)
-l128 = lambda x: _format_be(x, width=128)
-l = l32
-
-
 # Formatter class
 class Bitfield(object):
     """
@@ -98,9 +79,17 @@ class Bitfield(object):
                 raise OverflowError
         return val
 
+    def be(self):
+        """Return as string in big-endian format."""
+        return _format_be(self.val, width=self.width)
+
+    def le(self):
+        """Return as a string in little-endian format."""
+        return _format_le(self.val, width=self.width)
+
     def __str__(self):
         """"Return like '[0000 1111 0000 1111]'"""
-        return _format_be(self.val, width=self.width)
+        return self.be()
 
     __repr__ = __str__
 
@@ -167,10 +156,9 @@ class Bitfield(object):
         return result
 
 
-bf4 = lambda x: Bitfield(x, width=4)
-bf8 = lambda x: Bitfield(x, width=8)
-bf16 = lambda x: Bitfield(x, width=16)
-bf32 = lambda x: Bitfield(x, width=32)
-bf64 = lambda x: Bitfield(x, width=64)
-bf128 = lambda x: Bitfield(x, width=128)
-bf = bf32
+b4 = lambda x: Bitfield(x, width=4)
+b8 = lambda x: Bitfield(x, width=8)
+b16 = lambda x: Bitfield(x, width=16)
+b32 = lambda x: Bitfield(x, width=32)
+b64 = lambda x: Bitfield(x, width=64)
+b128 = lambda x: Bitfield(x, width=128)
