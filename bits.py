@@ -5,18 +5,38 @@ def _splitn(s, n):
 
 def _breakn(s, n, char=' '):
     """Insert a character between every n characters of a string."""
+    if n is None:
+        return s
     return char.join(_splitn(s, n))
 
 
 def _reverse_str(s):
+    """Return a string in reversed order."""
     return s[::-1]
 
 
-def _format_be(x, width=32, grouping=4):
+def _invert_bits(s):
+    """Return string with all 0s turned into 1s and vice versa."""
+    parts = []
+    for c in s:
+        if c == '0':
+            c = '1'
+        elif c == '1':
+            c = '0'
+        parts.append(c)
+    return ''.join(parts)
+
+
+def _format_be(x, width=32, grouping=4, brackets=True):
     """Format a number in base 2 using big-endian represpentation.
     This number is 32 bits wide.
     """
-    return _breakn(('{:0' + str(width) + 'b}').format(x), grouping)
+    if x >= 2 ** width:
+        raise OverflowError
+    sval = format(_breakn(('{:0' + str(width) + 'b}').format(x), grouping))
+    if brackets:
+        sval = "[{}]".format(sval)
+    return sval
 
 
 def _format_le(x, width=32, grouping=4):
@@ -59,14 +79,9 @@ class Bitfield(object):
             self.val = val
         self.width = width
 
-    def as_raw_str(self):
-        """"Return like '0000111100001111'"""
-        # 99999 for our purposes is maxint
-        return _format_be(self.val, width=self.width, grouping=999999)
-
     def __str__(self):
         """"Return like '[0000 1111 0000 1111]'"""
-        return "[{}]".format(_format_be(self.val, width=self.width))
+        return _format_be(self.val, width=self.width)
 
     __repr__ = __str__
 
@@ -121,10 +136,10 @@ class Bitfield(object):
         return self._make_result(other, self.width, '>>', self.val >> other)
 
     def __invert__(self):
-        sval = '0b' + self.as_raw_str()\
-                          .replace('0', 'x')\
-                          .replace('1', '0')\
-                          .replace('x', '1')
+        sval = _format_be(self.val, width=self.width, grouping=None,
+                          brackets=False)
+        sval = _invert_bits(sval)
+        sval = '0b' + sval
         result = self.__class__(sval, width=self.width)
         self._log1('~', result)
         return result

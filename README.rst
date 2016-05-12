@@ -2,7 +2,7 @@
 bits
 ====
 
-Simple script so you can play around with bit fields and see the results.
+Python script that lets you play around with bit fields and see the results.
 
 Run 
 ===
@@ -20,13 +20,13 @@ which print the results in big-endian and little-endian format respectively.
 ::
 
     >>> b(32)
-    '0000 0000 0000 0000 0000 0000 0010 0000'
+    '[0000 0000 0000 0000 0000 0000 0010 0000]'
 
     >>> b(32 << 1)
-    '0000 0000 0000 0000 0000 0000 0100 0000'
+    '[0000 0000 0000 0000 0000 0000 0100 0000]'
 
     >>> l32(0xffff & 0x1f)
-    '1111 1000 0000 0000 0000 0000 0000 0000'
+    '[1111 1000 0000 0000 0000 0000 0000 0000]'
 
 You can also use the ``Bitfield`` class, aliased as ``bf()`` to evaluate
 complex expressions and see the intermediate results.
