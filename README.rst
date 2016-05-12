@@ -14,7 +14,7 @@ Run
 Examples
 ========
 
-Simple formatting can be done with the ``b()`` and `l()`` series of functions
+Simple formatting can be done with the ``b()`` and ``l()`` series of functions
 which print the results in big-endian and little-endian format respectively.
 
 ::

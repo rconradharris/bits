@@ -27,21 +27,26 @@ def _invert_bits(s):
     return ''.join(parts)
 
 
-def _format_be(x, width=32, grouping=4, brackets=True):
-    """Format a number in base 2 using big-endian represpentation.
-    This number is 32 bits wide.
-    """
-    if x >= 2 ** width:
+def _format_be(x, width=32, grouping=4, brackets=True, overflow=False):
+    """Format big-endian"""
+    if x >= 2 ** width and not overflow:
         raise OverflowError
-    sval = format(_breakn(('{:0' + str(width) + 'b}').format(x), grouping))
+    sval = ('{:0' + str(width) + 'b}').format(x)
+    sval = sval[:width]
+    sval = _breakn(sval, grouping)
     if brackets:
         sval = "[{}]".format(sval)
     return sval
 
 
-def _format_le(x, width=32, grouping=4):
-    """Little-endian 32-bit value"""
-    return _reverse_str(_format_be(x, width=width, grouping=grouping))
+def _format_le(x, width=32, grouping=4, brackets=True, overflow=False):
+    """Format little-endian"""
+    sval = _format_be(x, width=width, grouping=grouping, brackets=False,
+                      overflow=overflow)
+    sval = _reverse_str(sval)
+    if brackets:
+        sval = "[{}]".format(sval)
+    return sval
 
 
 # Big endian
@@ -72,12 +77,26 @@ class Bitfield(object):
     You make each value an instance of Bitfield and after each operation, the
     Bitfield log the intermediate results.
     """
-    def __init__(self, val, width=32):
-        if hasattr(val, 'startswith') and val.startswith('0b'):
-            self.val = int(val, 2)
-        else:
-            self.val = val
+    def __init__(self, val, width=32, overflow=False):
+        self.val = self._convert_val(val, width, overflow=overflow)
         self.width = width
+
+    @staticmethod
+    def _convert_val(val, width, overflow=False):
+        if hasattr(val, 'startswith'):
+            if val.startswith('0b'):
+                pass
+            elif val.startswith('[') and val.endswith(']'):
+                val = val.replace('[', '').replace(']', '').replace(' ', '')
+            else:
+                raise ValueError('Unrecognized binary string')
+            val = int(val, 2)
+        if val >= 2 ** width:
+            if overflow:
+                val = val % 2 ** width
+            else:
+                raise OverflowError
+        return val
 
     def __str__(self):
         """"Return like '[0000 1111 0000 1111]'"""
@@ -91,7 +110,6 @@ class Bitfield(object):
         if self.width != other.width:
             raise ValueError('bit widths do not match')
         return self.width
-
 
     def _print_line(self, key, value):
         key = key.ljust(16)
@@ -108,11 +126,12 @@ class Bitfield(object):
         self._print_line(operator, str(result))
         print('')
 
-    def _make_result(self, other, width, operator, val):
-        result = self.__class__(val, width=width)
+    def _make_result(self, other, width, operator, val, overflow=False):
+        result = self.__class__(val, width=width, overflow=overflow)
         self._log2(other, operator, result)
         return result
 
+    # Binary(Bitfield, Bitfield) operators
     def __and__(self, other):
         width = self._check_width(other)
         return self._make_result(other, width, '&', self.val & other.val)
@@ -125,16 +144,19 @@ class Bitfield(object):
         width = self._check_width(other)
         return self._make_result(other, width, '^', self.val ^ other.val)
 
+    # Binary(Bitfield, int) operators
     def __lshift__(self, other):
         if isinstance(other, Bitfield):
             raise ValueError('Bitfield is not a valid right operand')
-        return self._make_result(other, self.width, '<<', self.val << other)
+        return self._make_result(other, self.width, '<<', self.val << other,
+                                 overflow=True)
 
     def __rshift__(self, other):
         if isinstance(other, Bitfield):
             raise ValueError('Bitfield is not a valid right operand')
         return self._make_result(other, self.width, '>>', self.val >> other)
 
+    # Unary(Bitfield) operators
     def __invert__(self):
         sval = _format_be(self.val, width=self.width, grouping=None,
                           brackets=False)
@@ -145,13 +167,10 @@ class Bitfield(object):
         return result
 
 
-bf4 = lambda x: Bitfield(x, width=4444)
+bf4 = lambda x: Bitfield(x, width=4)
 bf8 = lambda x: Bitfield(x, width=8)
 bf16 = lambda x: Bitfield(x, width=16)
 bf32 = lambda x: Bitfield(x, width=32)
 bf64 = lambda x: Bitfield(x, width=64)
 bf128 = lambda x: Bitfield(x, width=128)
 bf = bf32
-
-# Tests
-#print ~(bf(0) | bf(1))
