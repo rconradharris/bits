@@ -59,8 +59,15 @@ class Bitfield(object):
     Bitfield log the intermediate results.
     """
     def __init__(self, val, width=32, overflow=False):
-        self.val = self._convert_val(val, width, overflow=overflow)
-        self.width = width
+        if isinstance(val, Bitfield):
+            other = val
+            self.val = other.val
+            self.width = other.width
+            self.overflow = other.overflow
+        else:
+            self.val = self._convert_val(val, width, overflow=overflow)
+            self.width = width
+            self.overflow = overflow
 
     @staticmethod
     def _convert_val(val, width, overflow=False):

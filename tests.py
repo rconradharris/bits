@@ -36,6 +36,9 @@ class b4TestCase(BaseTestCase):
         """[0001] is bitsstyle, it should round-trip"""
         self.assertResult('[0001]', b4('[0001]'))
 
+    def test_from_other_bitfield(self):
+        self.assertResult('[0001]', b4(b4('[0001]')))
+
 
 class b8TestCase(BaseTestCase):
     def test_positive_int(self):
