@@ -36,3 +36,51 @@ quadword (``b64``), and 128-bit double quadword (``b128``).
     ^               : [1111 1111 1111 1111 1111 1111 1100 1101]
 
     [1111 1111 1111 1111 1111 1111 1100 1101]
+
+
+Operations
+==========
+
+* AND (``&``)
+* OR (``|``)
+* XOR (``^``)
+* NOT (``~``)
+* LEFT SHIFT (``<<``)
+* RIGHT SHIFT (``>>``); zero-fill
+
+
+Ways to specify a value
+=======================
+
+A variety of different data-types can be used as input values for the
+``Bitfield`` class including:
+
+* Decimal (base 10)::
+
+    >>> b4(3)
+    [0011]
+
+* Hexadecimal (base 16)::
+
+    >>> b4(0xa)
+    [1010]
+
+* Octal (base 8)::
+
+    >>> b4(011)
+    [1001]
+
+* Binary, Python format (base 2)::
+
+    >>> b4(0b0110)
+    [0110]
+
+* Binary, bits string format (base 2)::
+
+    >>> b8('[0001 1010]')
+    [0001 1010]
+
+* Negative decimal yielding two's complement::
+
+    >>> b4(-6)
+    [1010]
