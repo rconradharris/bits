@@ -27,10 +27,29 @@ def _invert_bits(s):
     return ''.join(parts)
 
 
-def _format_be(x, width=32, grouping=4, brackets=True, overflow=False):
-    """Format big-endian"""
-    if x >= 2 ** width and not overflow:
+def _check_overflow(x, width):
+    """Check to see whether a particular value can be represented given this
+    width of bits.
+
+    For negative values, we represent the value in two's complement so we know
+    exactly how large (in the negative direction) it can be.
+
+    A positive value, however, could be a signed or an unsigned int so we
+    assume the latter since it represents more values.
+
+    If it doesn't fit, an OverflowError is raised.
+    """
+    if x >= 2 ** width:
         raise OverflowError
+    if x < -(2 ** (width - 1)):
+        raise OverflowError
+
+
+def _format_be(x, width=32, grouping=4, brackets=True):
+    """Format big-endian"""
+    if x < 0:
+        # Two's complement
+        x = 2 ** width + x
     sval = ('{:0' + str(width) + 'b}').format(x)
     sval = sval[:width]
     sval = _breakn(sval, grouping)
@@ -39,10 +58,9 @@ def _format_be(x, width=32, grouping=4, brackets=True, overflow=False):
     return sval
 
 
-def _format_le(x, width=32, grouping=4, brackets=True, overflow=False):
+def _format_le(x, width=32, grouping=4, brackets=True):
     """Format little-endian"""
-    sval = _format_be(x, width=width, grouping=grouping, brackets=False,
-                      overflow=overflow)
+    sval = _format_be(x, width=width, grouping=grouping, brackets=False)
     sval = _reverse_str(sval)
     if brackets:
         sval = "[{}]".format(sval)
@@ -79,11 +97,12 @@ class Bitfield(object):
             else:
                 raise ValueError('Unrecognized binary string')
             val = int(val, 2)
-        if val >= 2 ** width:
-            if overflow:
+        if overflow:
+            if val >= 2 ** width:
                 val = val % 2 ** width
-            else:
-                raise OverflowError
+            # TODO: do the same wrap around for negative numbers
+        else:
+            _check_overflow(val, width)
         return val
 
     def be(self):

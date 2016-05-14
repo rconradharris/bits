@@ -8,12 +8,28 @@ class BaseTestCase(unittest.TestCase):
         self.assertEqual(expected, str(val))
 
 
+class BitfieldTestCase(BaseTestCase):
+    def test_positive_overflow(self):
+        self.assertResult('[0000]', Bitfield(16, width=4, overflow=True))
+
+    def test_negative_overflow(self):
+        self.assertResult('[0111]', Bitfield(-9, width=4, overflow=True))
+
+
 class b4TestCase(BaseTestCase):
     def test_zero(self):
         self.assertResult('[0000]', b4(0))
 
     def test_positive_int(self):
         self.assertResult('[0001]', b4(1))
+
+    def test_negative_int(self):
+        self.assertResult('[1111]', b4(-1))
+        self.assertResult('[1110]', b4(-2))
+        self.assertResult('[1101]', b4(-3))
+        self.assertResult('[1000]', b4(-8))
+        with self.assertRaises(OverflowError):
+            b4(-9)
 
     def test_hex_input(self):
         self.assertResult('[1111]', b4(0xf))
