@@ -1,3 +1,4 @@
+# Utility functions
 def _splitn(s, n):
     """Split a string into substrings of size at most n"""
     return [s[i:i+n] for i in range(0, len(s), n)]
@@ -27,46 +28,6 @@ def _invert_bits(s):
     return ''.join(parts)
 
 
-def _check_overflow(x, width):
-    """Check to see whether a particular value can be represented given this
-    width of bits.
-
-    For negative values, we represent the value in two's complement so we know
-    exactly how large (in the negative direction) it can be.
-
-    A positive value, however, could be a signed or an unsigned int so we
-    assume the latter since it represents more values.
-
-    If it doesn't fit, an OverflowError is raised.
-    """
-    if x >= 2 ** width:
-        raise OverflowError
-    if x < -(2 ** (width - 1)):
-        raise OverflowError
-
-
-def _format_be(x, width=32, grouping=4, brackets=True):
-    """Format big-endian"""
-    if x < 0:
-        # Two's complement
-        x = 2 ** width + x
-    sval = ('{:0' + str(width) + 'b}').format(x)
-    sval = sval[:width]
-    sval = _breakn(sval, grouping)
-    if brackets:
-        sval = "[{}]".format(sval)
-    return sval
-
-
-def _format_le(x, width=32, grouping=4, brackets=True):
-    """Format little-endian"""
-    sval = _format_be(x, width=width, grouping=grouping, brackets=False)
-    sval = _reverse_str(sval)
-    if brackets:
-        sval = "[{}]".format(sval)
-    return sval
-
-
 # Formatter class
 class Bitfield(object):
     """
@@ -87,8 +48,8 @@ class Bitfield(object):
             self.width = width
             self.overflow = overflow
 
-    @staticmethod
-    def _convert_val(val, width, overflow=False):
+    @classmethod
+    def _convert_val(cls, val, width, overflow=False):
         if hasattr(val, 'startswith'):
             if val.startswith('0b'):
                 pass
@@ -102,16 +63,56 @@ class Bitfield(object):
                 val = val % 2 ** width
             # TODO: do the same wrap around for negative numbers
         else:
-            _check_overflow(val, width)
+            cls._check_overflow(val, width)
         return val
 
-    def be(self):
-        """Return as string in big-endian format."""
-        return _format_be(self.val, width=self.width)
+    @classmethod
+    def _check_overflow(cls, val, width):
+        """Check to see whether a particular value can be represented given this
+        width of bits.
 
-    def le(self):
+        For negative values, we represent the value in two's complement so we know
+        exactly how large (in the negative direction) it can be.
+
+        A positive value, however, could be a signed or an unsigned int so we
+        assume the latter since it represents more values.
+
+        If it doesn't fit, an OverflowError is raised.
+        """
+        if val >= 2 ** width:
+            raise OverflowError
+        if val < -(2 ** (width - 1)):
+            raise OverflowError
+
+    def rawstr(self):
+        val = self.val
+        if val < 0:
+            # Two's complement
+            val += 2 ** self.width
+        sval = ('{:0' + str(self.width) + 'b}').format(val)
+        sval = sval[:self.width]
+        return sval
+
+    @staticmethod
+    def _format_pretty_bit_string(sval, grouping=4, brackets=True):
+        """Take a string like 11110000 and make it [1111 0000]"""
+        sval = _breakn(sval, grouping)
+        if brackets:
+            sval = "[{}]".format(sval)
+        return sval
+
+    def be(self, grouping=4, brackets=True):
+        """Return as string in big-endian format."""
+        sval = self.rawstr()
+        return self._format_pretty_bit_string(
+                sval, grouping=grouping, brackets=brackets)
+
+    def le(self, grouping=4, brackets=True):
         """Return as a string in little-endian format."""
-        return _format_le(self.val, width=self.width)
+        sval = self.rawstr()
+        sval = _reverse_str(sval)
+        return self._format_pretty_bit_string(
+                sval, grouping=grouping, brackets=brackets)
 
     def __str__(self):
         """"Return like '[0000 1111 0000 1111]'"""
@@ -173,15 +174,13 @@ class Bitfield(object):
 
     # Unary(Bitfield) operators
     def __invert__(self):
-        sval = _format_be(self.val, width=self.width, grouping=None,
-                          brackets=False)
-        sval = _invert_bits(sval)
-        sval = '0b' + sval
+        sval = '0b' + _invert_bits(self.rawstr())
         result = self.__class__(sval, width=self.width)
         self._log1('~', result)
         return result
 
 
+# Convenience functions
 b4 = lambda x: Bitfield(x, width=4)
 b8 = lambda x: Bitfield(x, width=8)
 b16 = lambda x: Bitfield(x, width=16)
