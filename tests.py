@@ -90,3 +90,9 @@ class OperatorTestCase(BaseTestCase):
         self.assertResult('[1111]', ~b4('[0000]'))
         self.assertResult('[0000]', ~b4('[1111]'))
         self.assertResult('[1010]', ~b4('[0101]'))
+
+    def test_addition_decimal(self):
+        self.assertResult('[1000]', b4(7) + 1)
+
+    def test_subtract_decimal(self):
+        self.assertResult('[0111]', b4(8) - 1)

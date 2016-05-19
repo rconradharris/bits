@@ -172,6 +172,16 @@ class Bitfield(object):
             raise ValueError('Bitfield is not a valid right operand')
         return self._make_result(other, self.width, '>>', self.val >> other)
 
+    def __sub__(self, other):
+        if isinstance(other, Bitfield):
+            raise ValueError('Bitfield is not a valid right operand')
+        return self._make_result(other, self.width, '-', self.val - other)
+
+    def __add__(self, other):
+        if isinstance(other, Bitfield):
+            raise ValueError('Bitfield is not a valid right operand')
+        return self._make_result(other, self.width, '+', self.val + other)
+
     # Unary(Bitfield) operators
     def __invert__(self):
         sval = '0b' + _invert_bits(self.rawstr())
